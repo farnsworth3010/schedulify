@@ -8,7 +8,5 @@ services:
       context: ./schedulify-front
     ports:
       - "5170:80"
-    networks:
-      - backend
     volumes:
       - ./schedulify-front:/app
