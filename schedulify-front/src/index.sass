@@ -10,7 +10,26 @@ body
     overflow-y: scroll
     @media screen and (max-width: 768px)
         padding: 15px 7.5vw
+    &.dark
+        background: $background-dark
 
 a
     text-decoration: none 
     color: #fff
+
+.react-toggle-track-check
+    top: 9px !important
+    left: 5px !important
+
+.react-toggle-track-x
+    top: 9px !important
+    right: 14px !important
+
+.react-toggle-thumb
+    box-shadow: none !important
+
+.react-toggle
+    position: absolute !important
+    right: 0
+    top: 50%
+    transform: translateY(-50%)

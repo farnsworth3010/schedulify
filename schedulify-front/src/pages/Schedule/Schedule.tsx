@@ -34,8 +34,16 @@ const Schedule = () => {
             <div className={styles.info}>
                 Группа: {info.currentGroup}
             </div>
+            <h1 className={styles.blockHeader}>Звонки</h1>
+            {/* <div className={styles.daysContainer}> */}
             <Alarm />
+            {/* {currentDay} */}
+            {/* </div> */}
+            <h1 className={styles.blockHeader}>Расписание на неделю</h1>
+            <div className={styles.daysContainer}>
+
             {Days}
+            </div>
         </motion.div>)
 }
 export default Schedule

@@ -71,7 +71,7 @@ const Home = () => {
           </Link>
           <Link target="_blank" className={styles.canteen} to={'https://vsu.by/platnie-uslygi/menyu-stolovoj.html'}>
             <div>
-              Меню столовой
+              Столовая
             </div>
           </Link>
         </motion.div>
