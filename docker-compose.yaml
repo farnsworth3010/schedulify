@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  front:
+    container_name: react_front
+    image:  schedule/react-front
+    restart: always
+    build:
+      context: ./schedulify-front
+    ports:
+      - "5170:80"
+    networks:
+      - backend
+    volumes:
+      - ./schedulify-front:/app

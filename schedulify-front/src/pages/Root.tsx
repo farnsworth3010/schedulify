@@ -6,12 +6,12 @@ import DarkThemeToggle from "../components/DarkThemeToggle/DarkThemeToggle";
 const Root = () => {
   return (
     <>
+      <p className={styles.beta}>beta v121123</p>
       {/* <h1 className={styles.header}> */}
       <div className={styles.headerContainer}>
 
         <Link to={'/'}>
           <img className={styles.header} src={logo} />
-
         </Link>
         <DarkThemeToggle />
         {/* Schedul<span className={styles.headerColored}>ify</span> */}

@@ -83,13 +83,16 @@ const Home = () => {
             I курс
           </div>
           <div className={styles.groups}>
-            {groupNames.first.map((group, index) =>
+            {/* {groupNames.first.map((group, index) =>
               <Link onClick={() => groupClick(group.name)} to={`/schedule/1${index}`}>
                 <div className={styles.group}>
                   <h2>{group.name}</h2>
                 </div>
               </Link>
-            )}
+            )} */}
+            <h3 className={styles.unavailable}>
+              Временно недоступно
+            </h3>
           </div>
         </div>
         <div className={styles.course}>
@@ -117,13 +120,16 @@ const Home = () => {
             III курс
           </div>
           <div className={styles.groups}>
-            {groupNames.third.map((group, index) =>
+            {/* {groupNames.third.map((group, index) =>
               <Link onClick={() => groupClick(group.name)} to={`/schedule/3${index}`}>
                 <div className={styles.group}>
                   <h2>{group.name}</h2>
                 </div>
               </Link>
-            )}
+            )} */}
+            <h3 className={styles.unavailable}>
+              Временно недоступно
+            </h3>
           </div>
         </div>
         <div className={styles.course}>
@@ -134,13 +140,16 @@ const Home = () => {
             IV курс
           </div>
           <div className={styles.groups}>
-            {groupNames.forth.map((group, index) =>
+            {/* {groupNames.forth.map((group, index) =>
               <Link onClick={() => groupClick(group.name)} to={`/schedule/4${index}`}>
                 <div className={styles.group}>
                   <h2>{group.name}</h2>
                 </div>
               </Link>
-            )}
+            )} */}
+            <h3 className={styles.unavailable}>
+              Временно недоступно
+            </h3>
           </div>
         </div>
       </div>
