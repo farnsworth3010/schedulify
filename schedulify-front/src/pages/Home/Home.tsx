@@ -4,7 +4,7 @@ import first_year_img from "../../assets/years/first_year.png";
 import second_year_img from "../../assets/years/second_year.png";
 import third_year_img from "../../assets/years/third_year.png";
 import forth_year_img from "../../assets/years/forth_year.png";
-import { Link } from "react-router-dom";
+import {HashLink as Link} from "react-router-hash-link"
 import { setGroup } from "../../store/scheduleSlice";
 import { motion } from "framer-motion"
 import { childVariants, routeVariants } from "../router";
@@ -104,7 +104,7 @@ const Home = () => {
           </div>
           <div className={styles.groups}>
             {groupNames.second.map((group, index) =>
-              <Link onClick={() => groupClick(group.name)} to={`/schedule/2${index}`}>
+              <Link onClick={() => groupClick(group.name)} to={`/schedule/2${index}/#`}>
                 <div className={styles.group}>
                   <h2>{group.name}</h2>
                 </div>

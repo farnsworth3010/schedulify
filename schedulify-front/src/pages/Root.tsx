@@ -6,7 +6,7 @@ import DarkThemeToggle from "../components/DarkThemeToggle/DarkThemeToggle";
 const Root = () => {
   return (
     <>
-      <p className={styles.beta}>beta v121123</p>
+      <p className={styles.beta}>beta v131123</p>
       {/* <h1 className={styles.header}> */}
       <div className={styles.headerContainer}>
 

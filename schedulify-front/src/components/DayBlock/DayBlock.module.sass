@@ -13,15 +13,41 @@
         margin-bottom: 15px
         border-bottom: 1px solid $primary // TAKE FROM COLORS!!!
         padding-bottom: 15px
+        span 
+            display: block
         &:last-child
             margin-bottom: 0
             padding-bottom: 0
-            border-bottom: none 
+            border-bottom: none !important
 body[class~=dark]
     .dayBlock
         background: #1c1c1c  // TAKE FROM COLORS
         color: rgba(255, 255, 255, 0.8)
+        li
+            border-bottom: 1px solid #3c3c3c
+    .subgroupBlock
+        color: #000
+        background: #000
+        &:first-child
+            color: #899878
+        &:last-child
+            color: #ff9f96 
 
 
 .weekend
     color: #fc7268 // TAKE FROM COLORS
+
+
+.subgroupBlock
+    border-radius: 5px
+    padding: 5px
+    margin-top: 5px
+    color: #000
+    background: #ffffff
+    &:first-child
+        color: #79a147
+    &:last-child
+        color: #ff6456 
+        
+        
+        

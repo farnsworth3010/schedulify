@@ -8,18 +8,23 @@ import { routeVariants } from '../router'
 import { motion } from "framer-motion"
 const Schedule = () => {
     const { id } = useParams()
-    const info = useSelector((state) => state.schedule)
     const { data, isSuccess } = useGetScheduleQuery(id)
-    console.log(data)
     let Days = []
     const dayNames = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
     if (isSuccess) {
+        let counter = 0
         for (let i = 0; i < 7; ++i) {
+            let day = []
+            while(data[counter]?.day_number == i + 1) {
+                day.push(data[counter])
+                ++counter
+            }
+            console.log(day)
             if (i < 5) {
-                Days.push(<DayBlock key={i} schedule={data.filter((el) => el.day_number == i + 1)} dayName={dayNames[i]} />)
+                Days.push(<DayBlock key={i} schedule={day} dayName={dayNames[i]} />)
             }
             else {
-                Days.push(<DayBlock key={i} schedule={data.filter((el) => el.day_number == i + 1)} isWeekend={true} dayName={dayNames[i]} />)
+                Days.push(<DayBlock key={i} schedule={day} isWeekend={true} dayName={dayNames[i]} />)
             }
 
         }
@@ -31,8 +36,8 @@ const Schedule = () => {
             animate="final"
             className="home component"
         >
-            <div className={styles.info}>
-                Группа: {info.currentGroup}
+            <div className={`${styles.info} ${isSuccess ? undefined : styles.waitGroup}`}>
+                Группа: {isSuccess && data[0].group_name}
             </div>
             <h1 className={styles.blockHeader}>Звонки</h1>
             {/* <div className={styles.daysContainer}> */}
