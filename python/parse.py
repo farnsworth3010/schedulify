@@ -11,8 +11,7 @@ import datetime
 import json
 
 urllib3.disable_warnings()
-connect = mysql.connector.connect(host="localhost", port="33060", user="schedule", password="12345678",
-                                  database="schedule", auth_plugin='mysql_native_password')  # Подключение к базе данных
+connect = mysql.connector.connect(host="localhost", port="33060", user="schedule", password="12345678", database="schedule", auth_plugin='mysql_native_password')  # Подключение к базе данных
 cursor = connect.cursor()
 
 class colors:  # Цвета
@@ -27,10 +26,9 @@ class colors:  # Цвета
     UNDERLINE = '\033[4m'
 
 
-# ,"R", "T", "V", "X", "Z"]
 firstLetters = ["R", "T", "V", "X", "Z", "AB", "AD", "AF"]
 secondLetters = ["S", "U", "W", "Y", "AA",
-                 "AC", "AE", "AF"]  # , "S", "U", "W", "Y"]
+                 "AC", "AE", "AF"]
 
 
 def logTime():  # Логи
@@ -76,11 +74,14 @@ def downloadXls(url):
 
 
 def scanGroups(sheet, startfrom):
+    """
+    Сканирует названия групп
+    """
     groups = []
     for x in firstLetters:
         if getCellVal(sheet, x, startfrom-2):
             groups.append(str(getCellVal(sheet, x, startfrom-2)))
-            print(logTime()+str(getCellVal(sheet, x, startfrom-2)))
+            print(logTime()+str(groups[-1])))
     return groups
 
 
@@ -274,8 +275,7 @@ def downloadHtml(forced = False):
                      'w').write(linkstart+x.get("href"))
                 print(logTime()+colors.WARNING+colors.WARNING +
                       "starting update..."+colors.ENDC)
-                cursor.execute(
-                    """TRUNCATE schedule""")  # Стираем базу данных :)
+                cursor.execute("""TRUNCATE schedule""")  # Стираем базу данных :)
                 downloadXls(linkstart+x.get("href"))
 
 
@@ -284,7 +284,7 @@ if (len(sys.argv) > 1):
         while (True):
             downloadHtml(True)
             time.sleep(600)
-    else:
+    else: # передать название файла в функцию
         xlsToMysql(sys.argv[1])
 else:
     while (True):
