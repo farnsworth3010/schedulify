@@ -289,5 +289,5 @@ if (len(sys.argv) > 1):
         xlsToMysql(sys.argv[1])
 else:
     while (True):
-        downloadHtml()
+        downloadHtml(False)
         time.sleep(600)
