@@ -15,7 +15,6 @@ connect = mysql.connector.connect(host="localhost", port="33060", user="schedule
                                   database="schedule", auth_plugin='mysql_native_password')  # Подключение к базе данных
 cursor = connect.cursor()
 
-
 class colors:  # Цвета
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -207,7 +206,7 @@ def xlsToMysql(filename):
     print(logTime()+colors.OKGREEN+"Schedule was updated!"+colors.ENDC)
 
 
-def downloadHtml(forced):
+def downloadHtml(forced = False):
     testjson = {'lastcheck': checkDate()}
     jsonString = json.dumps(testjson, indent=4)
     # Запись страницы в файл
