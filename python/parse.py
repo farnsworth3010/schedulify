@@ -32,261 +32,217 @@ secondLetters = ["S", "U", "W", "Y", "AA",
 
 
 def logTime():  # Логи
+    """Время"""
     offset = datetime.timedelta(hours=3)
     tz = datetime.timezone(offset, name="Minsk")
     now = datetime.datetime.now(tz)
     return "["+now.strftime("%H:%M")+"] "
 
+def log(color, text):
+    """Лог в терминал"""
+    print(logTime() + color + text + colors.ENDC)
 
-def schedDate():  # Дата проверки на сайте
+def schedDate():
+    """Вставляет в таблицу дату проверки"""
     offset = datetime.timedelta(hours=3)
     tz = datetime.timezone(offset, name="Minsk")
     now = datetime.datetime.now(tz)
     return "["+now.strftime("%d.%m.%Y %H:%M")+"] "
 
 
-def checkDate():  # Дата проверки на сайте
-    offset = datetime.timedelta(hours=3)
-    tz = datetime.timezone(offset, name="Minsk")
-    now = datetime.datetime.now(tz)
-    return "["+now.strftime("%H:%M")+"] "
-
-
-def getMergedCellVal(sheet, cell):  # Получить данные ячейки
+def getMergedCellVal(sheet, letter, num):  
+    """Получает данные ячейки"""
+    cell = sheet[f'{letter}{num}']
     rng = [s for s in sheet.merged_cells.ranges if cell.coordinate in s]
     return sheet.cell(rng[0].min_row, rng[0].min_col).value if len(rng) != 0 else cell.value
 
 
-def getCellVal(sheet, letter, num):  # Упрощение получения данных ячейки
-    return getMergedCellVal(sheet, sheet[f'{letter}{num}'])
+def checkDay(start, day_number, group_id, group_name, firstLetter, secondLetter, sheet):
+    """Парсит день в таблице"""
+    startpos = start
+    days = ['Понедельник', "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+    for i in range(1, 9):  # Проверяем 8 пар
+        subjectName = ""
+        teacherFirstGroup = ""
+        teacherSecondGroup = ""
+        teacherOfBothGroups = ""
+        audienceFirstGroup = ""
+        audienceSecondGroup = ""
+        audienceOfBothGroups = ""
+        subjectFirstGroup = ""
+        subjectSecondGroup = ""
+        if getMergedCellVal(sheet, firstLetter, startpos) != getMergedCellVal(sheet, secondLetter, startpos):
+            if getMergedCellVal(sheet, firstLetter, startpos) != None:
+                subjectFirstGroup = getMergedCellVal(sheet, firstLetter, startpos)  # Первая подгруппа
+            if getMergedCellVal(sheet, secondLetter, startpos) != None:
+                subjectSecondGroup = getMergedCellVal(sheet, secondLetter, startpos)  # Вторая подгруппа
+        else:
+            if getMergedCellVal(sheet, firstLetter, startpos) != None:
+                subjectName = getMergedCellVal(sheet, firstLetter, startpos)
 
+        pos = startpos + 1  # Преподаватель (2 строка)
+        if getMergedCellVal(sheet, firstLetter, pos) != getMergedCellVal(sheet, secondLetter, pos):  # Две группы
+            if getMergedCellVal(sheet, firstLetter, pos) != None:
+                teacherFirstGroup = getMergedCellVal(
+                    sheet, firstLetter, pos)  # Первая подгруппа
+            if getMergedCellVal(sheet, secondLetter, pos):
+                teacherSecondGroup = getMergedCellVal(sheet, secondLetter, pos)  # Вторая подгруппа
+        else:
+            if getMergedCellVal(sheet, firstLetter, pos) != None:
+                teacherOfBothGroups = getMergedCellVal(sheet, firstLetter, pos)  # Общий преподаватель
 
-def downloadXls(url):
-    try:
-        # Скачиваем таблицу по полученной ссылке
-        r = requests.get(url, verify=False)
-        open("table.xls", 'wb').write(r.content)
-        print(logTime()+colors.OKGREEN+"Table downloaded..."+colors.ENDC)
-    except:
-        print(logTime()+colors.FAIL+"Error while downloading xls!"+colors.ENDC)
-        sys.exit()
-    xlsToMysql("table.xls")
+        pos = startpos + 2  # Аудитория (3 строка)
+        if getMergedCellVal(sheet, firstLetter, pos) != getMergedCellVal(sheet, secondLetter, pos):  # Две группы
+            if getMergedCellVal(sheet, firstLetter, pos) != None:
+                audienceFirstGroup = getMergedCellVal(sheet, firstLetter, pos)  # Первая аудитория
+            if getMergedCellVal(sheet, secondLetter, pos) != None:
+                audienceSecondGroup = getMergedCellVal(sheet, secondLetter, pos)  # Вторая аудитория
+        else:
+            if getMergedCellVal(sheet, firstLetter, pos) != None:
+                audienceOfBothGroups = getMergedCellVal(sheet, firstLetter, pos)  # Общая аудитория
+
+        # Проверяем деление на группы
+        if teacherFirstGroup or teacherSecondGroup or audienceFirstGroup or audienceSecondGroup:
+            try:
+                log(colors.BOLD, f"[{days[int(day_number)-1]} {subjectName} 1:{str(audienceSecondGroup)} 2:{str(audienceSecondGroup)} 1:{teacherFirstGroup} 2:{teacherSecondGroup}]")
+                if subjectFirstGroup or subjectSecondGroup:
+                    cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceFirstGroup) +
+                                    """', '"""+group_id+"""', '"""+day_number+"""', '"""+subjectFirstGroup+"""', '1', '"""+teacherFirstGroup+"""', '"""+group_name+"""', '2', '1', '"""+schedDate()+"""');""")
+                    cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceSecondGroup) +
+                                    """', '"""+group_id+"""', '"""+day_number+"""', '"""+subjectSecondGroup+"""', '2', '"""+teacherSecondGroup+"""', '"""+group_name+"""', '2', '1', '"""+schedDate()+"""');""")
+                else:
+                    cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceFirstGroup) +
+                                    """', '"""+group_id+"""', '"""+day_number+"""', '"""+subjectName+"""', '1', '"""+teacherFirstGroup+"""', '"""+group_name+"""', '2', '1', '"""+schedDate()+"""');""")
+                    cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceSecondGroup) +
+                                    """', '"""+group_id+"""', '"""+day_number+"""', '"""+subjectName+"""', '2', '"""+teacherSecondGroup+"""', '"""+group_name+"""', '2', '1', '"""+schedDate()+"""');""")
+            except mysql.connector.Error as err:
+                log(colors.FAIL, "Something went wrong: {}".format(err))
+        elif teacherOfBothGroups or audienceOfBothGroups or subjectName:  # Общая пара
+            try:
+                cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceOfBothGroups) +
+                                """', '"""+group_id+"""', '"""+day_number+"""', '"""+subjectName+"""', NULL, '"""+teacherOfBothGroups+"""', '"""+group_name+"""', '2', '1', '"""+schedDate()+"""');""")
+                log(colors.BOLD, f"[{days[int(day_number)-1]} {subjectName} {str(audienceOfBothGroups)} {teacherOfBothGroups}]")
+            except mysql.connector.Error as err:
+                log(colors.FAIL + "Something went wrong: {}".format(err))
+        connect.commit()
+        startpos += 3  # Сдвигаем стартовую позицию к следующей паре
+    print("\n")
 
 
 def scanGroups(sheet, startfrom):
-    """
-    Сканирует названия групп
-    """
+    """Сканирует названия групп"""
+    log(colors.OKGREEN, "looking for groups...")
     groups = []
     for x in firstLetters:
-        if getCellVal(sheet, x, startfrom-2):
-            groups.append(str(getCellVal(sheet, x, startfrom-2)))
-            print(logTime()+str(groups[-1])))
+        if getMergedCellVal(sheet, x, startfrom-2):
+            groups.append(str(getMergedCellVal(sheet, x, startfrom-2)))
+            log(colors.BOLD, str[groups[-1]])
     return groups
 
 
-def xlsToMysql(filename):
-    print(logTime()+filename)
-    os.system("libreoffice --convert-to xlsx "+filename+" --headless")
-    print(logTime()+colors.OKGREEN +
-          "Table converted from xls to xlsx..."+colors.ENDC)
-    wb = openpyxl.load_workbook(filename+"x")  # Открываем таблицу
-    sheet = wb.active  # Открываем лист
-
-    def checkDay(start, dayname, day_number, group_id, group_name, firstLetter, secondLetter):
-        startpos = start
-        days = ['Понедельник', "Вторник", "Среда",
-                "Четверг", "Пятница", "Суббота"]
-        for i in range(1, 9):  # Проверяем 8 пар
-            subjectName = ""
-            teacherFirstGroup = ""
-            teacherSecondGroup = ""
-            teacherOfBothGroups = ""
-            audienceFirstGroup = ""
-            audienceSecondGroup = ""
-            audienceOfBothGroups = ""
-            subjectFirstGroup = ""
-            subjectSecondGroup = ""
-            if (getCellVal(sheet, firstLetter, startpos) != getCellVal(sheet, secondLetter, startpos)):
-                if (getCellVal(sheet, firstLetter, startpos) != None):
-                    subjectFirstGroup = getCellVal(
-                        sheet, firstLetter, startpos)  # Первая подгруппа
-                if (getCellVal(sheet, secondLetter, startpos) != None):
-                    subjectSecondGroup = getCellVal(
-                        sheet, secondLetter, startpos)  # Вторая подгруппа
-            else:
-                if (getCellVal(sheet, firstLetter, startpos) != None):
-                    subjectName = getCellVal(sheet, firstLetter, startpos)
-
-            pos = startpos + 1  # Преподаватель (2 строка)
-            if (getCellVal(sheet, firstLetter, pos) != getCellVal(sheet, secondLetter, pos)):  # Две группы
-                if (getCellVal(sheet, firstLetter, pos) != None):
-                    teacherFirstGroup = getCellVal(
-                        sheet, firstLetter, pos)  # Первая подгруппа
-                if (getCellVal(sheet, secondLetter, pos)):
-                    teacherSecondGroup = getCellVal(
-                        sheet, secondLetter, pos)  # Вторая подгруппа
-            else:
-                if (getCellVal(sheet, firstLetter, pos) != None):
-                    teacherOfBothGroups = getCellVal(
-                        sheet, firstLetter, pos)  # Общий преподаватель
-
-            pos = startpos + 2  # Аудитория (3 строка)
-            if (getCellVal(sheet, firstLetter, pos) != getCellVal(sheet, secondLetter, pos)):  # Две группы
-                if (getCellVal(sheet, firstLetter, pos) != None):
-                    audienceFirstGroup = getCellVal(
-                        sheet, firstLetter, pos)  # Первая аудитория
-                if (getCellVal(sheet, secondLetter, pos) != None):
-                    audienceSecondGroup = getCellVal(
-                        sheet, secondLetter, pos)  # Вторая аудитория
-            else:
-                if (getCellVal(sheet, firstLetter, pos) != None):
-                    audienceOfBothGroups = getCellVal(
-                        sheet, firstLetter, pos)  # Общая аудитория
-
-            # Проверяем деление на группы
-            if (teacherFirstGroup or teacherSecondGroup or audienceFirstGroup or audienceSecondGroup):
-                try:
-                    print(logTime()+f"[{days[int(day_number)-1]} {subjectName} 1:{str(audienceSecondGroup)} 2:{str(audienceSecondGroup)} 1:{teacherFirstGroup} 2:{teacherSecondGroup}]")
-                    if (subjectFirstGroup or subjectSecondGroup):
-                        cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceFirstGroup) +
-                                       """', '"""+str(group_id)+"""', '"""+str(day_number)+"""', '"""+subjectFirstGroup+"""', '1', '"""+teacherFirstGroup+"""', '"""+group_name+"""', '"""+str(2)+"""', '"""+str(1)+"""', '"""+schedDate()+"""');""")
-                        cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceSecondGroup) +
-                                       """', '"""+str(group_id)+"""', '"""+str(day_number)+"""', '"""+subjectSecondGroup+"""', '2', '"""+teacherSecondGroup+"""', '"""+group_name+"""', '"""+str(2)+"""', '"""+str(1)+"""', '"""+schedDate()+"""');""")
-                    else:
-                        cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceFirstGroup) +
-                                       """', '"""+str(group_id)+"""', '"""+str(day_number)+"""', '"""+subjectName+"""', '1', '"""+teacherFirstGroup+"""', '"""+group_name+"""', '"""+str(2)+"""', '"""+str(1)+"""', '"""+schedDate()+"""');""")
-                        cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceSecondGroup) +
-                                       """', '"""+str(group_id)+"""', '"""+str(day_number)+"""', '"""+subjectName+"""', '2', '"""+teacherSecondGroup+"""', '"""+group_name+"""', '"""+str(2)+"""', '"""+str(1)+"""', '"""+schedDate()+"""');""")
-                    connect.commit()
-                except mysql.connector.Error as err:
-                    print(logTime()+"Something went wrong: {}".format(err))
-            elif (teacherOfBothGroups != "" or audienceOfBothGroups != "" or subjectName != ""):  # Общая пара
-                try:
-                    cursor.execute("""INSERT INTO `schedule` (id, lesson_number, audience, group_id, day_number, subject, subgroup_id, teacher, group_name, course, faculty, upd) VALUES (NULL, '"""+str(i)+"""', '"""+str(audienceOfBothGroups) +
-                                   """', '"""+str(group_id)+"""', '"""+str(day_number)+"""', '"""+subjectName+"""', NULL, '"""+teacherOfBothGroups+"""', '"""+group_name+"""', '"""+str(2)+"""', '"""+str(1)+"""', '"""+schedDate()+"""');""")
-                    print(logTime()+f"[{days[int(day_number)-1]} {subjectName} {str(audienceOfBothGroups)} {teacherOfBothGroups}]")
-                    connect.commit()
-                except mysql.connector.Error as err:
-                    print(logTime()+"Something went wrong: {}".format(err))
-            startpos = startpos+3  # Сдвигаем стартовую позицию к следующей паре
-        print("\n")
-    startfrom = 0  # Стартовая строка
+def findStartPosition(sheet):
+    """Ищет стартовую строку в таблице"""
     for i in range(1, 20):
-        if (str(getCellVal(sheet, "D", i)).find("курс") != -1):  # Ищем заголовок столбца
-            startfrom = i+5  # Назначаем стартовую позицию (1 строка)
-            print(logTime()+colors.OKGREEN +
-                  "Start row was found: "+str(startfrom)+colors.ENDC)
-            break
+        if str(getMergedCellVal(sheet, "D", i)).find("курс") != -1:  # Ищем заголовок столбца
+            log(colors.OKGREEN, "Start row was found: " + str(i + 5))
+            return i + 5
 
-    print(logTime()+colors.OKGREEN+"looking for groups.."+colors.ENDC)
+
+def parse(filename):
+    """Парсит таблицу"""
+    wb = openpyxl.load_workbook(filename)
+    sheet = wb.active  # Открываем лист
+    startfrom = findStartPosition(sheet)
     groups = scanGroups(sheet, startfrom)
+    for i in range(0, len(groups)):
+        position = startfrom
+        # if (getMergedCellVal(sheet, firstLetters[i], startfrom-2)):
+        print(logTime()+colors.HEADER+str(groups[i])+colors.ENDC)
+        checkDay(position, "1",  str(2)+str(i), groups[i], firstLetters[i], secondLetters[i], sheet)
+        position += 25
+        checkDay(position, "2", str(2)+str(i), groups[i],  firstLetters[i], secondLetters[i], sheet)
+        position += 25
+        checkDay(position, "3", str(2)+str(i), groups[i], firstLetters[i], secondLetters[i], sheet)
+        position += 25
+        checkDay(position, "4", str(2)+str(i), groups[i],  firstLetters[i], secondLetters[i], sheet)
+        position += 25
+        checkDay(position, "5", str(2)+str(i), groups[i], firstLetters[i], secondLetters[i], sheet)
+        position += 25
+        checkDay(position, "6", str(2)+str(i), groups[i],  firstLetters[i], secondLetters[i], sheet)
+    log(colors.OKGREEN, "Schedule was updated!")
 
-    monday = startfrom
-    tuesday = startfrom+25
-    wednesday = tuesday+25
-    thursday = wednesday+25
-    friday = thursday+25
-    saturday = friday+25
 
-    for i in range(0, 8):  # Проверяем каждый день каждой группы
-        if (getCellVal(sheet, firstLetters[i], startfrom-2)):
-            print(logTime()+colors.HEADER+str(groups[i])+colors.ENDC)
-            checkDay(monday, "Понедельник", "1",  int(str(2)+str(i)),
-                     groups[i], firstLetters[i], secondLetters[i])
-            checkDay(tuesday, "Вторник", "2", int(str(2)+str(i)),
-                     groups[i],  firstLetters[i], secondLetters[i])
-            checkDay(wednesday, "Среда", "3", int(str(2)+str(i)),
-                     groups[i], firstLetters[i], secondLetters[i])
-            checkDay(thursday, "Четверг", "4", int(str(2)+str(i)),
-                     groups[i],  firstLetters[i], secondLetters[i])
-            checkDay(friday, "Пятница", "5", int(str(2)+str(i)),
-                     groups[i], firstLetters[i], secondLetters[i])
-            checkDay(saturday, "Суббота", "6", int(str(2)+str(i)),
-                     groups[i],  firstLetters[i], secondLetters[i])
-    print(logTime()+colors.OKGREEN+"Schedule was updated!"+colors.ENDC)
+def convertTable(filename):
+    """Конвертирует таблицу из xls в xlsx для удобства работы"""
+    log(colors.BOLD, filename)
+    os.system("libreoffice --convert-to xlsx "+filename+" --headless")
+    log(colors.OKGREEN, "Table converted from xls to xlsx...")
+    parse(filename + "x")
 
+
+def downloadXls(url):
+    """Скачивает таблицу по ссылке"""
+    try:
+        r = requests.get(url, verify=False)
+        open("table.xls", 'wb').write(r.content)
+    except:
+        log(colors.FAIL, "Error while downloading xls!")
+        sys.exit()
+    log(colors.OKGREEN, "Table downloaded...")
+    convertTable("table.xls")
 
 def downloadHtml(forced = False):
-    testjson = {'lastcheck': checkDate()}
-    jsonString = json.dumps(testjson, indent=4)
-    # Запись страницы в файл
-    open('./test.json', 'w', encoding='utf-8').write(jsonString)
-    now = datetime.datetime.now()
-    print(logTime()+colors.WARNING+"Trying to download HTML page..."+colors.ENDC)
+    """Загружает страницу"""
     url = "http://vsu.by/universitet/fakultety/matematiki-i-it/raspisanie.html"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'
-    }
-    gotPage = False
-    data = ""
-    r = ""
-    while (gotPage != True):
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'}
+    data = None 
+    while True:
         try:
-            # Получение страницы
+            log(colors.WARNING, "Trying to download HTML page...")
             r = requests.get(url, verify=False, headers=headers)
-            data = r.text  # Сохранение текста страницы
-            # Запись страницы в файл
+            data = r.text
             open('schedule.html', 'w', encoding='utf-8').write(data)
-            print(logTime()+colors.OKGREEN+"Page downloaded..."+colors.ENDC)
-            gotPage = True
+            log(colors.OKGREEN, "Page downloaded...")
+            break
         except:
-            print(logTime()+colors.FAIL+"Download failed, retrying..."+colors.ENDC)
+            log(colors.FAIL, "Download failed, retrying after 60 seconds...")
             time.sleep(60)
-    print(logTime()+colors.WARNING+"Trying to parse..."+colors.ENDC)
-    # try:
+    log(colors.WARNING, "Trying to parse...")
     soup = BeautifulSoup(data, 'html.parser')
     linkstart = "https://vsu.by"
-    # Поиск ссылки на файл
-    links = soup.find(
-        'table', {'class': 'table-bordered'}).find('td').find_all('a')
+    links = soup.find('table', {'class': 'table-bordered'}).find('td').find_all('a')
     for x in links:
         if x.get("href").find('занятий') != -1:
-            try:
-                if (forced == False):
-                    # Проверяем сохранена ли ссылка на прошлое
+            linkstart += x.get("href")
+            if forced:
+                open("savedlink.txt", 'w').write(linkstart)
+                log(colors.WARNING, "starting FORCED update...")
+                cursor.execute("""TRUNCATE schedule""")
+                downloadXls(linkstart)
+            else:
+                try:
                     savedlink = open("savedlink.txt").read()
-                    print(logTime()+colors.WARNING +
-                        "Old link was found..."+colors.ENDC)
-                    print(logTime()+colors.WARNING +
-                        "Trying to compare..."+colors.ENDC)
-                    # Сравниваем прошлое расписание с полученным
-                    if (savedlink == linkstart+x.get("href")):
-                        print(logTime()+colors.OKGREEN+"Schedule is up to date :)!"+colors.ENDC)
-                        break
+                    log(colors.WARNING, "Old link was found")
+                    log(colors.WARNING, "Trying to compare...")
+                    if (savedlink == linkstart):
+                        log(colors.OKGREEN, "Schedule is up to date :)!")
                     else:
-                        open("savedlink.txt",
-                            'w').write(linkstart+x.get("href"))
-                        print(logTime()+colors.WARNING+colors.WARNING +
-                            "starting update..."+colors.ENDC)
-                        cursor.execute(
-                            """TRUNCATE schedule""")  # Стираем базу данных :)
-                        downloadXls(linkstart+x.get("href"))
-                else:
-                    open("savedlink.txt",
-                        'w').write(linkstart+x.get("href"))
-                    print(logTime()+colors.WARNING+colors.WARNING +
-                        "starting update..."+colors.ENDC)
-                    cursor.execute(
-                        """TRUNCATE schedule""")  # Стираем базу данных :)
-                    downloadXls(linkstart+x.get("href"))
-            except:
-                open("savedlink.txt",
-                     'w').write(linkstart+x.get("href"))
-                print(logTime()+colors.WARNING+colors.WARNING +
-                      "starting update..."+colors.ENDC)
-                cursor.execute("""TRUNCATE schedule""")  # Стираем базу данных :)
-                downloadXls(linkstart+x.get("href"))
+                        open("savedlink.txt",'w').write(linkstart)
+                        log(colors.WARNING, "starting update...")
+                        cursor.execute("""TRUNCATE schedule""")
+                        downloadXls(linkstart)
+                except:
+                    open("savedlink.txt",'w').write(linkstart)
+                    log(colors.WARNING, "starting update...")
+                    cursor.execute("""TRUNCATE schedule""")
+                    downloadXls(linkstart)
+            break
 
 
-if (len(sys.argv) > 1):
-    if sys.argv[1] == "--force":
-        while (True):
-            downloadHtml(True)
-            time.sleep(600)
-    else: # передать название файла в функцию
-        xlsToMysql(sys.argv[1])
+if len(sys.argv) > 1:
+    if sys.argv[1] == "--force": downloadHtml(True)
+    else: convertTable(sys.argv[1])
 else:
-    while (True):
+    while True:
         downloadHtml(False)
-        time.sleep(600)
+        time.sleep(3600)
