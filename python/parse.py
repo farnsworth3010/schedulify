@@ -136,7 +136,8 @@ def scanGroups(sheet, startfrom):
     for x in firstLetters:
         if getMergedCellVal(sheet, x, startfrom-2):
             groups.append(str(getMergedCellVal(sheet, x, startfrom-2)))
-            log(colors.BOLD, str[groups[-1]])
+            log(colors.BOLD, str(groups[-1]))
+    print("\n")
     return groups
 
 
